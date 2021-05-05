@@ -21,7 +21,20 @@ function useAuth(code) {
         })
     }, [code]);
 
-    //neeced to call al of the diff spotify APIs
+
+    useEffect(() => {
+        if (!refreshToken || !expiresIn) return
+        axios.post('http://localhost:3001/refresh', {
+            refreshToken,
+        }).then(res => {
+            setAccessToken(res.data.accessToken)
+            setExpiresIn(res.data.expiresIn)
+        }).catch(() => {
+            window.location = '/'
+        })
+    }, [refreshToken, expiresIn]);
+
+    //need to call al of the diff spotify APIs
     return accessToken
 
 
