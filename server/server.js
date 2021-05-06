@@ -1,58 +1,64 @@
-const express = require('express')
-const cors = require('cors')
-
-const bodyParser = require('body-parser')
-
-const SpotifyWebApi = require('spotify-web-api-node')
+require("dotenv").config()
+const express = require("express")
+const cors = require("cors")
+const bodyParser = require("body-parser")
+const lyricsFinder = require("lyrics-finder")
+const SpotifyWebApi = require("spotify-web-api-node")
 
 const app = express()
 app.use(cors())
-app.use(bodyParser.json())
+app.use(express.json({limit: '20mb'}));
+app.use(express.urlencoded({ extended: false, limit: '20mb' }));
 
-app.post('/refresh', (req, res) => {
+app.post("/refresh", (req, res) => {
     const refreshToken = req.body.refreshToken
     const spotifyApi = new SpotifyWebApi({
-        redirectUri: 'http://localhost:3000',
-        clientId: 'a3fc1a05eedf443e872b37c1fe5645c8',
-        clientSecret: '4e0c2b636a5e4b50bfcf642293b8c70c',
+        redirectUri: process.env.REDIRECT_URI,
+        clientId: process.env.CLIENT_ID,
+        clientSecret: process.env.CLIENT_SECRET,
         refreshToken,
     })
 
     spotifyApi
-    .refreshAccessToken()
-    .then(
-        (data) => {
+        .refreshAccessToken()
+        .then(data => {
             res.json({
                 accessToken: data.body.accessToken,
-                expiresIn: data.body.expiresIn
+                expiresIn: data.body.expiresIn,
             })
-        }).catch(() => {
-            res.sendStatus(400)
         })
-
-})
-
-app.post('/login', (req, res) => {
-
-    const code = req.body.code
-
-    const spotifyApi = new SpotifyWebApi({
-        redirectUri: 'http://localhost:3000',
-        clientId: 'a3fc1a05eedf443e872b37c1fe5645c8',
-        clientSecret: '4e0c2b636a5e4b50bfcf642293b8c70c'
-    })
-
-    spotifyApi.authorizationCodeGrant(code).then(data => {
-        res.json({
-            accessToken: data.body.access_token,
-            refreshToken: data.body.refresh_token,
-            expiresIn: data.body.expires_in
-        })
-    })
         .catch(err => {
             console.log(err)
             res.sendStatus(400)
         })
+})
+
+app.post("/login", (req, res) => {
+    const code = req.body.code
+    const spotifyApi = new SpotifyWebApi({
+        redirectUri: process.env.REDIRECT_URI,
+        clientId: process.env.CLIENT_ID,
+        clientSecret: process.env.CLIENT_SECRET,
+    })
+
+    spotifyApi
+        .authorizationCodeGrant(code)
+        .then(data => {
+            res.json({
+                accessToken: data.body.access_token,
+                refreshToken: data.body.refresh_token,
+                expiresIn: data.body.expires_in,
+            })
+        })
+        .catch(err => {
+            res.sendStatus(400)
+        })
+})
+
+app.get("/lyrics", async (req, res) => {
+    const lyrics =
+        (await lyricsFinder(req.query.artist, req.query.track)) || "No Lyrics Found"
+    res.json({ lyrics })
 })
 
 app.listen(3001)
