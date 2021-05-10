@@ -1,13 +1,15 @@
-# React connection to Server and API 
+# React connection to Server and API
+## Spotify Clone ++ Lyrics
 -----
 
 ## Available Scripts
 
-In the project directory, you can run:
+In the project directory, run:
+`npm start`
 
-### `npm run devStart`
+In the /Server directory, run:
+`npm run devStart`
 
-Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 -----
